@@ -1,0 +1,1 @@
+"""OSS Compass application package."""
