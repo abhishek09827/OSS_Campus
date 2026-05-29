@@ -1,0 +1,83 @@
+name: linkedin_activity
+version: 1.0.0
+description: LinkedIn Activity API source for OSS Compass
+auth:
+  type: oauth2_bearer
+  env_var: LINKEDIN_ACCESS_TOKEN
+base_url: https://api.linkedin.com/v2
+tables:
+  - name: linkedin_activity.posts
+    description: Published posts with engagement metrics.
+    endpoint: /ugcPosts
+    primary_key: id
+    pagination:
+      type: next_page_token
+      field: paging.links.next
+    columns:
+      - name: id
+        type: string
+      - name: author_urn
+        type: string
+      - name: text
+        type: string
+      - name: like_count
+        type: integer
+      - name: comment_count
+        type: integer
+      - name: share_count
+        type: integer
+      - name: created_at
+        type: timestamp
+      - name: updated_at
+        type: timestamp
+  - name: linkedin_activity.profile
+    description: Profile metadata including skills and connections count.
+    endpoint: /me
+    primary_key: id
+    columns:
+      - name: id
+        type: string
+      - name: headline
+        type: string
+      - name: skills
+        type: array[string]
+      - name: connections_count
+        type: integer
+      - name: location
+        type: string
+      - name: industry
+        type: string
+  - name: linkedin_activity.reactions
+    description: Reactions the authenticated user has made on posts.
+    endpoint: /socialActions/{actionUrn}/comments
+    primary_key: reaction_id
+    columns:
+      - name: reaction_id
+        type: string
+      - name: post_id
+        type: string
+      - name: reaction_type
+        type: string
+      - name: reacted_at
+        type: timestamp
+      - name: actor_urn
+        type: string
+parameters:
+  headers:
+    Authorization: Bearer ${LINKEDIN_ACCESS_TOKEN}
+  rate_limit:
+    requests_per_minute: 60
+  retry:
+    max_attempts: 3
+    backoff_seconds: 2
+examples:
+  - query: |
+      SELECT headline, connections_count
+      FROM linkedin_activity.profile
+      LIMIT 1;
+  - query: |
+      SELECT id, like_count, comment_count, share_count
+      FROM linkedin_activity.posts
+      ORDER BY created_at DESC
+      LIMIT 10;
+
